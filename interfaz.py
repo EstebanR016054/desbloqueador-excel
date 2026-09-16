@@ -32,16 +32,19 @@ def procesar_excel():
         wb = excel.Workbooks.Open(ruta_archivo)
         hojas_modificadas = 0
 
-        # 5. Aplicar reglas y desproteger
+        # 5. Aplicar reglas, desproteger y modificar Z3
         for ws in wb.Sheets:
-            if ws.Visible != -1: # Si está oculta, saltar
+            # Filtro A: Si está oculta, saltar
+            if ws.Visible != -1: 
                 continue
             
-            valor_z3 = ws.Range("Z3").Value
-            if valor_z3 is None or str(valor_z3).strip() == "": # Si Z3 está vacía, saltar
+            # Filtro B: Si Z3 está vacía, saltar
+            valor_z3_crudo = ws.Range("Z3").Value
+            if valor_z3_crudo is None or str(valor_z3_crudo).strip() == "": 
                 continue
                 
-            if ws.ProtectContents: # Si está protegida
+            # Intento de desprotección
+            if ws.ProtectContents: 
                 for clave in contrasenas:
                     try:
                         ws.Unprotect(Password=clave)
@@ -50,12 +53,24 @@ def procesar_excel():
                     except pywintypes.com_error:
                         pass # Si falla la clave, intentar la siguiente
 
+            # NUEVA FUNCIÓN: Modificar celda Z3 (Solo si la hoja ya está desprotegida)
+            if not ws.ProtectContents:
+                # a) Convertir a texto, quitar espacios a los lados y poner en mayúsculas
+                texto_z3 = str(valor_z3_crudo).strip().upper()
+                
+                # b) Validar si termina en "C". Si no, se la agregamos.
+                if not texto_z3.endswith("C"):
+                    texto_z3 += "C"
+                    
+                # c) Escribir el nuevo valor en la celda (esto mantiene intacto el formato visual)
+                ws.Range("Z3").Value = texto_z3
+
         # 6. Guardar y cerrar
         wb.Save()
         wb.Close()
         excel.Quit()
 
-        messagebox.showinfo("Éxito", f"¡Proceso terminado!\nSe desprotegieron {hojas_modificadas} hoja(s).")
+        messagebox.showinfo("Éxito", f"¡Proceso terminado!\nSe completó la validación y limpieza del archivo.")
         estado_label.config(text="Esperando nuevo archivo...")
 
     except Exception as e:
@@ -81,10 +96,10 @@ entrada_claves = tk.Entry(ventana, width=50)
 entrada_claves.insert(0, "clave1, clave2, 12345, admin") 
 entrada_claves.pack(pady=5)
 
-tk.Label(ventana, text="El programa saltará hojas ocultas y hojas sin datos en Z3.", fg="gray").pack(pady=10)
+tk.Label(ventana, text="Filtra hojas, desprotege, y estandariza la celda Z3.", fg="gray").pack(pady=10)
 
 # Botón principal
-btn_procesar = tk.Button(ventana, text="Cargar Archivo y Desproteger", command=procesar_excel, bg="#0078D7", fg="white", font=("Arial", 11, "bold"))
+btn_procesar = tk.Button(ventana, text="Cargar Archivo y Procesar", command=procesar_excel, bg="#0078D7", fg="white", font=("Arial", 11, "bold"))
 btn_procesar.pack(pady=10)
 
 # Etiqueta de estado
