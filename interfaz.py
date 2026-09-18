@@ -140,7 +140,7 @@ tk.Label(ventana, text="Contraseñas (separadas por coma):", font=("Arial", 10, 
 
 # Caja de texto para las claves
 entrada_claves = tk.Entry(ventana, width=55)
-entrada_claves.insert(0, "clave1, clave2, 12345, admin") 
+entrada_claves.insert(0, "FOPM1, FOLP1, LUNA0123, luna0123") 
 entrada_claves.pack(pady=5)
 
 tk.Label(
